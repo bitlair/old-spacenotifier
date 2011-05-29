@@ -8,3 +8,7 @@ define('DB_DATABASE','');
 define('URL','http://USERNAME:PASSWORD@IP_HOST/admin.cgi?action=station_statistics');
 define('TIMEOUT', 15);		// in minutes
 define('SSID','');
+
+define('TWITTER_URL','http://identi.ca/api/statuses/update.xml');
+define('TWITTER_USERNAME','');
+define('TWITTER_PASSWORD','');
