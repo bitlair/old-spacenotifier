@@ -89,7 +89,7 @@ if ($count > 0 && !$open) {
 // close it
 else if ($count == 0 && $open) {
 	// get last event
-	$event = @mysql_fetch_object(mysql_query("SELECT e.*, u.username, m.device, u.sex FROM wifi_event e LEFT JOIN user_mac_address m ON m.mac_address = e.mac_address LEFT JOIN user u ON m.user_id = u.id WHERE e.join_date > 0 AND e.part_date = 0 AND u.username <> '' ORDER BY e.part_date DESC LIMIT 1"));
+	$event = @mysql_fetch_object(mysql_query("SELECT e.*, u.username, m.device, u.sex FROM wifi_event e LEFT JOIN user_mac_address m ON m.mac_address = e.mac_address LEFT JOIN user u ON m.user_id = u.id WHERE e.join_date > 0 AND e.part_date > 0 AND u.username <> '' ORDER BY e.part_date DESC LIMIT 1"));
 	
 	if ($event->sex == "male") $own = "his";
 	else $own = "her";
