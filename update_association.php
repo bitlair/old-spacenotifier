@@ -7,6 +7,11 @@ include("common.php");
 
 echo "Updating associations on AP...\n";
 
+$radios = array (
+	"1"	=> "802.11g",
+	"2" => "802.11a"
+);
+
 /**
  * Setup MySQL connection
  * 
@@ -72,7 +77,7 @@ if ($count > 0 && !$open) {
 	if ($event->sex == "male") $own = "his";
 	else $own = "her";	
 	
-	$trigger_message = "User {$event->username} joined SSID {$event->ssid} on Radio {$event->radio} with {$own} {$event->device} at " . date("Y-m-d H:i:s", $event->join_date);
+	$trigger_message = "User {$event->username} joined SSID {$event->ssid} @ {$radios[$event->radio]} with {$own} {$event->device} at " . date("Y-m-d H:i:s", $event->join_date);
 		
 	// update it
 	mysql_query("UPDATE space_state SET open = 1, trigger_message = '{$trigger_message}'");
@@ -89,7 +94,7 @@ else if ($count == 0 && $open) {
 	if ($event->sex == "male") $own = "his";
 	else $own = "her";
 	
-	$trigger_message = "User {$event->username} left SSID {$event->ssid} on Radio {$event->radio} with {$own} {$event->device} at " . date("Y-m-d H:i:s", $event->part_date);
+	$trigger_message = "User {$event->username} left SSID {$event->ssid} @ {$radios[$event->radio]} with {$own} {$event->device} at " . date("Y-m-d H:i:s", $event->part_date);
 	
 	// update it
 	mysql_query("UPDATE space_state SET open = 0, trigger_message = '{$trigger_message}'");	
