@@ -1,0 +1,5 @@
+This is the SpaceNotifier we currently use for the hackspace Bitlair.
+
+The script pulls the active associations from a HP ProCurve AP530 accesspoint and stores this in a MySQL database.
+
+This script is very, very, very alpha btw :-)
