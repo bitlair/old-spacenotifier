@@ -4,6 +4,8 @@
  */
 include("config.php");
 
+echo "Updating associations on AP...\n";
+
 /**
  * Setup MySQL connection
  * 
