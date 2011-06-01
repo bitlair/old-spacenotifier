@@ -13,3 +13,8 @@ function tweet($message, $username, $password, $twitterurl) {
   
   return false !== $ret; 
 }
+
+// based on jsb-udp
+function ircNotify($message) {
+	passthru('echo "' . $message . '" | /usr/local/bin/jsb-udp -p \\' . IRC_CHANNEL);
+}
