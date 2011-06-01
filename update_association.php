@@ -12,6 +12,11 @@ $radios = array (
 	"2" => "802.11a"
 );
 
+$gender_convert = array(
+	"male" => "his",
+	"female" => "her"
+);
+
 /**
  * Setup MySQL connection
  * 
@@ -32,6 +37,8 @@ if (trim($ret) == "") {
 }
 
 preg_match_all("'<tr class=\"eventablerow\">(.*?)</tr>'si",$ret,$out);
+$joins = array();
+$parts = array();
 
 foreach ($out[1] as $row) {
 	preg_match_all("'<td class=\"section-cell\" align=\"center\">(.*?)</td>'si",$row,$cells);
@@ -51,6 +58,7 @@ foreach ($out[1] as $row) {
 		mysql_query("INSERT INTO wifi_event (mac_address, radio, ssid, join_date, last_update) VALUES ('{$mac}', '{$radio}', '{$ssid}', " . time() . ", " . time() . ")");
 		
 		echo "JOIN {$mac}\n";
+		$join[] = $mac;
 	}
 }
 
@@ -63,6 +71,7 @@ while ($o = mysql_fetch_object($q)) {
 	mysql_query("UPDATE wifi_event SET part_date = '" . time() . "' WHERE id = {$o->id}");
 	
 	echo "PART {$o->mac_address}\n";
+	$part[] = $o->mac_address;
 }
 
 // determine if we're open or not
@@ -73,11 +82,8 @@ $open = @mysql_result(mysql_query("SELECT open FROM space_state"),0,0);
 if ($count > 0 && !$open) {
 	// get first event (only registered users)
 	$event = @mysql_fetch_object(mysql_query("SELECT e.*, u.username, u.sex, m.device FROM wifi_event e LEFT JOIN user_mac_address m ON m.mac_address = e.mac_address LEFT JOIN user u ON m.user_id = u.id WHERE e.join_date > 0 AND e.part_date = 0 AND u.username <> '' ORDER BY e.join_date ASC LIMIT 1"));
-
-	if ($event->sex == "male") $own = "his";
-	else $own = "her";	
 	
-	$trigger_message = "User {$event->username} joined SSID {$event->ssid} @ {$radios[$event->radio]} with {$own} {$event->device} at " . date("Y-m-d H:i:s", $event->join_date);
+	$trigger_message = "User {$event->username} joined SSID {$event->ssid} @ {$radios[$event->radio]} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->join_date);
 		
 	// update it
 	mysql_query("UPDATE space_state SET open = 1, trigger_message = '{$trigger_message}'");
@@ -91,14 +97,22 @@ else if ($count == 0 && $open) {
 	// get last event
 	$event = @mysql_fetch_object(mysql_query("SELECT e.*, u.username, m.device, u.sex FROM wifi_event e LEFT JOIN user_mac_address m ON m.mac_address = e.mac_address LEFT JOIN user u ON m.user_id = u.id WHERE e.join_date > 0 AND e.part_date > 0 AND u.username <> '' ORDER BY e.part_date DESC LIMIT 1"));
 	
-	if ($event->sex == "male") $own = "his";
-	else $own = "her";
-	
-	$trigger_message = "User {$event->username} left SSID {$event->ssid} @ {$radios[$event->radio]} with {$own} {$event->device} at " . date("Y-m-d H:i:s", $event->part_date);
+	$trigger_message = "User {$event->username} left SSID {$event->ssid} @ {$radios[$event->radio]} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->part_date);
 	
 	// update it
 	mysql_query("UPDATE space_state SET open = 0, trigger_message = '{$trigger_message}'");	
 	
 	// tweet it
 	tweet("We are closed. " . $trigger_message, TWITTER_USERNAME, TWITTER_PASSWORD, TWITTER_URL);	
+}
+
+// do IRC join/parts
+$what = array("join","part");
+foreach ($what as $w) {
+	foreach ($$w as $mac) {
+		$user = @mysql_fetch_object(mysql_query("SELECT u.id, u.username, u.sex, m.device FROM user_mac_address m, user u WHERE m.mac_address = '" . mysql_real_escape_string($mac) . "' AND m.user_id = u.id"));
+		if ($user->id > 0) {
+			ircNotify($user->username . " " . $w . "s with " . $gender_convert[$user->sex]  . " " . $user->device);
+		}
+	}
 }

@@ -12,3 +12,5 @@ define('SSID','');
 define('TWITTER_URL','http://identi.ca/api/statuses/update.xml');
 define('TWITTER_USERNAME','');
 define('TWITTER_PASSWORD','');
+
+define('IRC_CHANNEL','#channel');
