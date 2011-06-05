@@ -75,7 +75,7 @@ while ($o = mysql_fetch_object($q)) {
 }
 
 // determine if we're open or not
-$count = @mysql_result(mysql_query("SELECT COUNT(id) FROM wifi_event WHERE join_date > 0 AND part_date = 0 AND ssid = '" . SSID . "'"),0,0);
+$count = @mysql_result(mysql_query("SELECT COUNT(id) FROM wifi_event e, user_mac_address m WHERE e.join_date > 0 AND e.part_date = 0 AND e.mac_address = m.mac_address"),0,0);
 $open = @mysql_result(mysql_query("SELECT open FROM space_state"),0,0);
 
 // open it
