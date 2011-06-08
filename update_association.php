@@ -23,45 +23,50 @@ $gender_convert = array(
  * TODO: use PDO or something.
  */
 if (!@mysql_connect(DB_HOST, DB_USERNAME, DB_PASSWORD)) {
-	die("mysql connect failed");
+	echo "mysql connect failed";
+	exit;
 }
 if (!@mysql_selectdb(DB_DATABASE)) {
-	die("mysql selectdb failed");
+	echo "mysql selectdb failed";
+	exit;
 }
 
 
 
-$ret = file_get_contents(URL);
+$ret = @file_get_contents(URL);
+$doparse = true;
 if (trim($ret) == "") {
-	die ("could not get data from url");
+	echo "could not get data from url... (but cleaning up)\n";
+	$doparse = false;
 }
 
-preg_match_all("'<tr class=\"eventablerow\">(.*?)</tr>'si",$ret,$out);
 $joins = array();
 $parts = array();
 
-foreach ($out[1] as $row) {
-	preg_match_all("'<td class=\"section-cell\" align=\"center\">(.*?)</td>'si",$row,$cells);
-	
-	$radio = trim($cells[1][0]);
-	$ssid = trim($cells[1][1]);
-	$mac = trim($cells[1][2]);
-
-	$event_id = @mysql_result(mysql_query("SELECT id FROM wifi_event WHERE mac_address = '{$mac}' AND part_date = 0"),0,0);
-	
-	// update
-	if ($event_id > 0) {
-		mysql_query("UPDATE wifi_event SET last_update = " . time() . " WHERE id = {$event_id}");		
-	}
-	// insert
-	else {
-		mysql_query("INSERT INTO wifi_event (mac_address, radio, ssid, join_date, last_update) VALUES ('{$mac}', '{$radio}', '{$ssid}', " . time() . ", " . time() . ")");
+if ($doparse) {
+	preg_match_all("'<tr class=\"eventablerow\">(.*?)</tr>'si",$ret,$out);
+	foreach ($out[1] as $row) {
+		preg_match_all("'<td class=\"section-cell\" align=\"center\">(.*?)</td>'si",$row,$cells);
 		
-		echo "JOIN {$mac}\n";
-		$join[] = $mac;
+		$radio = trim($cells[1][0]);
+		$ssid = trim($cells[1][1]);
+		$mac = trim($cells[1][2]);
+	
+		$event_id = @mysql_result(mysql_query("SELECT id FROM wifi_event WHERE mac_address = '{$mac}' AND part_date = 0"),0,0);
+		
+		// update
+		if ($event_id > 0) {
+			mysql_query("UPDATE wifi_event SET last_update = " . time() . " WHERE id = {$event_id}");		
+		}
+		// insert
+		else {
+			mysql_query("INSERT INTO wifi_event (mac_address, radio, ssid, join_date, last_update) VALUES ('{$mac}', '{$radio}', '{$ssid}', " . time() . ", " . time() . ")");
+			
+			echo "JOIN {$mac}\n";
+			$join[] = $mac;
+		}
 	}
 }
-
 
 // clean up old
 $q = mysql_query("SELECT * FROM wifi_event WHERE join_date > 0 AND part_date = 0 AND last_update < " . (time() - (TIMEOUT * 60)));
