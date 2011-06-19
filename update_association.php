@@ -105,7 +105,7 @@ if ($count > 0 && !$open) {
 	$event = $db->row("SELECT e.*, u.username, u.sex, m.device FROM wifi_event e LEFT JOIN user_mac_address m ON m.mac_address = e.mac_address LEFT JOIN user u ON m.user_id = u.id WHERE e.join_date > 0 AND e.part_date = 0 AND u.username <> '' ORDER BY e.join_date ASC LIMIT 1");
 	
 	if ($event->signal != "") $signal = " (signal $event->signal) ";
-	$trigger_message = "User {$event->username} joined SSID {$event->ssid} @ {$radios[$event->radio]}{$signal} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->join_date);
+	$trigger_message = "User {$event->username} joined SSID {$event->ssid} @ {$event->radio}{$signal} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->join_date);
 		
 	// update it
 	$db->update("space_state", array("open"=>1, "trigger_message"=>$trigger_message));
@@ -120,7 +120,7 @@ else if ($count == 0 && $open) {
 	$event = $db->row("SELECT e.*, u.username, m.device, u.sex FROM wifi_event e LEFT JOIN user_mac_address m ON m.mac_address = e.mac_address LEFT JOIN user u ON m.user_id = u.id WHERE e.join_date > 0 AND e.part_date > 0 AND u.username <> '' ORDER BY e.part_date DESC LIMIT 1");
 	
 	if ($event->signal != "") $signal = " (signal $event->signal) ";
-	$trigger_message = "User {$event->username} left SSID {$event->ssid} @ {$radios[$event->radio]}{$signal} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->part_date);
+	$trigger_message = "User {$event->username} left SSID {$event->ssid} @ {$event->radio}{$signal} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->part_date);
 	
 	// update it
 	$db->update("space_state", array("open"=>0, "trigger_message"=>$trigger_message));
