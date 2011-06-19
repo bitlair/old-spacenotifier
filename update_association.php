@@ -108,7 +108,7 @@ if ($count > 0 && !$open) {
 	$trigger_message = "User {$event->username} joined SSID {$event->ssid} @ {$event->radio}{$signal} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->join_date);
 		
 	// update it
-	$db->update("space_state", array("open"=>1, "trigger_message"=>$trigger_message));
+	$db->update("space_state", array("open"=>1, "trigger_message"=>$trigger_message), "open = ?", 0);
 	
 	// tweet it
 	tweet("We are OPEN! " . $trigger_message, TWITTER_USERNAME, TWITTER_PASSWORD, TWITTER_URL);
@@ -123,7 +123,7 @@ else if ($count == 0 && $open) {
 	$trigger_message = "User {$event->username} left SSID {$event->ssid} @ {$event->radio}{$signal} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->part_date);
 	
 	// update it
-	$db->update("space_state", array("open"=>0, "trigger_message"=>$trigger_message));
+	$db->update("space_state", array("open"=>0, "trigger_message"=>$trigger_message), "open = ?", 1);
 	
 	// tweet it
 	tweet("We are closed. " . $trigger_message, TWITTER_USERNAME, TWITTER_PASSWORD, TWITTER_URL);	
