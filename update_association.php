@@ -32,7 +32,6 @@ foreach ($_APS as $_AP) {
 			
 			echo "Pulling macs from '{$_AP["name"]}'...\n";
 			$macs = $module->get_macs();
-			print_r($macs);
 			
 			foreach ($macs as $mac) {
 				$event_id = $db->column("SELECT id FROM wifi_event WHERE mac_address = ? AND part_date = 0", $mac["mac_address"]);
