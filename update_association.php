@@ -1,97 +1,115 @@
 <?php
+error_reporting(0);
+
 /**
- * Include config
+ * Includes
  */
 include("config.php");
 include("common.php");
+include("db.php");
 
-echo "Updating associations on AP...\n";
-
-$radios = array (
-	"1"	=> "802.11g",
-	"2" => "802.11a"
-);
-
-$gender_convert = array(
-	"male" => "his",
-	"female" => "her"
-);
+echo "Updating associations on AP(s)...\n";
 
 /**
- * Setup MySQL connection
- * 
- * TODO: use PDO or something.
+ * Setup db connection
  */
-if (!@mysql_connect(DB_HOST, DB_USERNAME, DB_PASSWORD)) {
-	echo "mysql connect failed";
-	exit;
-}
-if (!@mysql_selectdb(DB_DATABASE)) {
-	echo "mysql selectdb failed";
-	exit;
-}
+$db = DB::get();
 
-
-
-$ret = @file_get_contents(URL);
-$doparse = true;
-if (trim($ret) == "") {
-	echo "could not get data from url... (but cleaning up)\n";
-	$doparse = false;
-}
-
+/**
+ * Update assocations on the AP's in the config.
+ */
 $joins = array();
 $parts = array();
 
-if ($doparse) {
-	preg_match_all("'<tr class=\"eventablerow\">(.*?)</tr>'si",$ret,$out);
-	foreach ($out[1] as $row) {
-		preg_match_all("'<td class=\"section-cell\" align=\"center\">(.*?)</td>'si",$row,$cells);
+foreach ($_APS as $_AP) {
+	$module_file = "aps/" . $_AP["type"] . ".php";
+	if (file_exists($module_file)) {
+		require_once($module_file);
 		
-		$radio = trim($cells[1][0]);
-		$ssid = trim($cells[1][1]);
-		$mac = trim($cells[1][2]);
-	
-		$event_id = @mysql_result(mysql_query("SELECT id FROM wifi_event WHERE mac_address = '{$mac}' AND part_date = 0"),0,0);
-		
-		// update
-		if ($event_id > 0) {
-			mysql_query("UPDATE wifi_event SET last_update = " . time() . " WHERE id = {$event_id}");		
-		}
-		// insert
-		else {
-			mysql_query("INSERT INTO wifi_event (mac_address, radio, ssid, join_date, last_update) VALUES ('{$mac}', '{$radio}', '{$ssid}', " . time() . ", " . time() . ")");
+		$class = "ap_" . $_AP["type"];
+		if (class_exists($class)) {
+			$module = new $class ($_AP["config"]);
 			
-			echo "JOIN {$mac}\n";
-			$join[] = $mac;
+			echo "Pulling macs from '{$_AP["name"]}'...\n";
+			$macs = $module->get_macs();
+			print_r($macs);
+			
+			foreach ($macs as $mac) {
+				$event_id = $db->column("SELECT id FROM wifi_event WHERE mac_address = ? AND part_date = 0", $mac["mac_address"]);
+				
+				// update
+				if ($event_id > 0) {
+					$update = array (
+						"radio" => $mac["radio"],
+						"ssid" => $mac["ssid"],
+						"signal" => $mac["signal"],
+						"last_update" => time()
+					);					
+					
+					$db->update("wifi_event",$update, "id = ?", $event_id);
+				}
+				// insert
+				else {
+					
+					$insert = array (
+						"mac_address" => $mac["mac_address"],
+						"radio" => $mac["radio"],
+						"ssid" => $mac["ssid"],
+						"signal" => $mac["signal"],
+						"join_date" => time(),
+						"last_update" => time()
+					);
+					
+					$db->insert("wifi_event", $insert);
+					
+					echo "JOIN {$mac["mac_address"]}\n";
+					$join[] = $insert;
+				}
+				
+			}
 		}
+		else {
+			echo "Error: class {$class} does not exist!\n";
+		}
+		
 	}
+	else {
+		echo "Error: {$module_file} does not exist!\n";
+	}
+	
 }
 
-// clean up old
-$q = mysql_query("SELECT * FROM wifi_event WHERE join_date > 0 AND part_date = 0 AND last_update < " . (time() - (TIMEOUT * 60)));
 
-while ($o = mysql_fetch_object($q)) {
+// clean up old
+$q = $db->query("SELECT * FROM wifi_event WHERE join_date > 0 AND part_date = 0 AND last_update < " . (time() - (TIMEOUT * 60)));
+
+foreach ($q as $o) {
 	// set current 0
-	mysql_query("UPDATE wifi_event SET part_date = '" . time() . "' WHERE id = {$o->id}");
+	$db->update("wifi_event", array ("part_date" => time()), "id = ?", $o->id);
 	
 	echo "PART {$o->mac_address}\n";
-	$part[] = $o->mac_address;
+	$part[] = array (
+		"mac_address" => $o->mac_address,
+		"radio" => $o->radio,
+		"ssid" => $o->ssid,
+		"signal" => $o->signal
+	);
 }
 
 // determine if we're open or not
-$count = @mysql_result(mysql_query("SELECT COUNT(id) FROM wifi_event e, user_mac_address m WHERE e.join_date > 0 AND e.part_date = 0 AND e.mac_address = m.mac_address"),0,0);
-$open = @mysql_result(mysql_query("SELECT open FROM space_state"),0,0);
+$count = $db->column("SELECT COUNT(id) FROM wifi_event e, user_mac_address m WHERE e.join_date > 0 AND e.part_date = 0 AND e.mac_address = m.mac_address");
+$open = $db->column("SELECT open FROM space_state");
 
 // open it
 if ($count > 0 && !$open) {
 	// get first event (only registered users)
-	$event = @mysql_fetch_object(mysql_query("SELECT e.*, u.username, u.sex, m.device FROM wifi_event e LEFT JOIN user_mac_address m ON m.mac_address = e.mac_address LEFT JOIN user u ON m.user_id = u.id WHERE e.join_date > 0 AND e.part_date = 0 AND u.username <> '' ORDER BY e.join_date ASC LIMIT 1"));
+	$event = $db->row("SELECT e.*, u.username, u.sex, m.device FROM wifi_event e LEFT JOIN user_mac_address m ON m.mac_address = e.mac_address LEFT JOIN user u ON m.user_id = u.id WHERE e.join_date > 0 AND e.part_date = 0 AND u.username <> '' ORDER BY e.join_date ASC LIMIT 1");
 	
-	$trigger_message = "User {$event->username} joined SSID {$event->ssid} @ {$radios[$event->radio]} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->join_date);
+	if ($event->signal != "") $signal = " (signal $event->signal) ";
+	$trigger_message = "User {$event->username} joined SSID {$event->ssid} @ {$radios[$event->radio]}{$signal} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->join_date);
 		
 	// update it
-	mysql_query("UPDATE space_state SET open = 1, trigger_message = '{$trigger_message}'");
+	$db->update("space_state", array("open"=>1, "trigger_message"=>$trigger_message));
 	
 	// tweet it
 	tweet("We are OPEN! " . $trigger_message, TWITTER_USERNAME, TWITTER_PASSWORD, TWITTER_URL);
@@ -100,12 +118,13 @@ if ($count > 0 && !$open) {
 // close it
 else if ($count == 0 && $open) {
 	// get last event
-	$event = @mysql_fetch_object(mysql_query("SELECT e.*, u.username, m.device, u.sex FROM wifi_event e LEFT JOIN user_mac_address m ON m.mac_address = e.mac_address LEFT JOIN user u ON m.user_id = u.id WHERE e.join_date > 0 AND e.part_date > 0 AND u.username <> '' ORDER BY e.part_date DESC LIMIT 1"));
+	$event = $db->row("SELECT e.*, u.username, m.device, u.sex FROM wifi_event e LEFT JOIN user_mac_address m ON m.mac_address = e.mac_address LEFT JOIN user u ON m.user_id = u.id WHERE e.join_date > 0 AND e.part_date > 0 AND u.username <> '' ORDER BY e.part_date DESC LIMIT 1");
 	
-	$trigger_message = "User {$event->username} left SSID {$event->ssid} @ {$radios[$event->radio]} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->part_date);
+	if ($event->signal != "") $signal = " (signal $event->signal) ";
+	$trigger_message = "User {$event->username} left SSID {$event->ssid} @ {$radios[$event->radio]}{$signal} with {$gender_convert[$event->sex]} {$event->device} at " . date("Y-m-d H:i:s", $event->part_date);
 	
 	// update it
-	mysql_query("UPDATE space_state SET open = 0, trigger_message = '{$trigger_message}'");	
+	$db->update("space_state", array("open"=>0, "trigger_message"=>$trigger_message));
 	
 	// tweet it
 	tweet("We are closed. " . $trigger_message, TWITTER_USERNAME, TWITTER_PASSWORD, TWITTER_URL);	
@@ -114,10 +133,14 @@ else if ($count == 0 && $open) {
 // do IRC join/parts
 $what = array("join","part");
 foreach ($what as $w) {
-	foreach ($$w as $mac) {
-		$user = @mysql_fetch_object(mysql_query("SELECT u.id, u.username, u.sex, m.device FROM user_mac_address m, user u WHERE m.mac_address = '" . mysql_real_escape_string($mac) . "' AND m.user_id = u.id"));
+	foreach ($$w as $row) {
+		$user = $db->row("SELECT u.id, u.username, u.sex, m.device FROM user_mac_address m, user u WHERE m.mac_address = ? AND m.user_id = u.id", $row["mac_address"]);
 		if ($user->id > 0) {
-			ircNotify($user->username . " " . $w . "s with " . $gender_convert[$user->sex]  . " " . $user->device);
+			$signal = $row["signal"];
+			if ($signal != "") $signal = ", signal " . $signal;
+			ircNotify($user->username . " " . $w . "s with " . $gender_convert[$user->sex]  . " " . $user->device . " @ {$row["ssid"]} ({$row["radio"]})" . $signal);
 		}
 	}
 }
+
+echo "done\n";
