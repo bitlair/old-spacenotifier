@@ -49,6 +49,15 @@ $_APS[1] = array (
 	)
 );
 
+
+/**
+ * Misc config
+ */
+$gender_convert = array(
+	"male" => "his",
+	"female" => "her"
+);
+
 /**
  * Custom notify
  */
