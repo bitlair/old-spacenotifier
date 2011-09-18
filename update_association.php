@@ -113,6 +113,8 @@ if ($count > 0 && !$open) {
 	// tweet it
 	tweet("We are OPEN! " . $trigger_message, TWITTER_USERNAME, TWITTER_PASSWORD, TWITTER_URL);
 	
+	// custom notify
+	customNotify(1);	
 }
 // close it
 else if ($count == 0 && $open) {
@@ -127,6 +129,9 @@ else if ($count == 0 && $open) {
 	
 	// tweet it
 	tweet("We are closed. " . $trigger_message, TWITTER_USERNAME, TWITTER_PASSWORD, TWITTER_URL);	
+	
+	// custom notify
+	customNotify(0);
 }
 
 // do IRC join/parts

@@ -48,3 +48,10 @@ $_APS[1] = array (
 		)
 	)
 );
+
+/**
+ * Custom notify
+ */
+function customNotify($state) {
+	return true;
+}
