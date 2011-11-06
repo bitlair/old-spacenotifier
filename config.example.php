@@ -64,3 +64,17 @@ $gender_convert = array(
 function customNotify($state) {
 	return true;
 }
+
+function customNotifyEvent() {
+	return true;
+}
+
+/**
+ * JSON variables
+ */
+define ('JSON_SPACE','spacename');
+define ('JSON_URL','https://space.url/');
+define ('JSON_ADDRESS','Address, Zip City, Country');
+define ('JSON_PHONE','+CCNNNNNNNNN');
+define ('JSON_CAM','http://cam.url/');
+define ('JSON_LOGO','https://logo.url/');

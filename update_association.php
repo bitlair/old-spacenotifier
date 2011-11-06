@@ -136,6 +136,7 @@ else if ($count == 0 && $open) {
 
 // do IRC join/parts
 $what = array("join","part");
+$event_count = 0;
 foreach ($what as $w) {
 	foreach ($$w as $row) {
 		$user = $db->row("SELECT u.id, u.username, u.sex, m.device FROM user_mac_address m, user u WHERE m.mac_address = ? AND m.user_id = u.id", $row["mac_address"]);
@@ -143,8 +144,13 @@ foreach ($what as $w) {
 			$signal = $row["signal"];
 			if ($signal != "") $signal = ", signal " . $signal;
 			ircNotify($user->username . " " . $w . "s with " . $gender_convert[$user->sex]  . " " . $user->device . " @ {$row["ssid"]} ({$row["radio"]})" . $signal);
+			$event_count++;
 		}
 	}
+}
+
+if ($event_count > 0) {
+	customNotifyEvent();
 }
 
 echo "done\n";
