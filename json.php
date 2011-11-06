@@ -19,7 +19,7 @@ function getJSON() {
 		$tmp_events[$o->join_date] = array("name"=>$o->username . " with " . $o->device,"type"=>"check-in");
 	}
 	
-	arsort($tmp_events);
+	krsort($tmp_events);
 	$count = 1;
 	$events = array();
 	
