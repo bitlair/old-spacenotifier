@@ -1,5 +1,7 @@
 <?php
 function getJSON() {
+	global $db;
+	
 	/**
 	 * Gather info from db
 	 */
