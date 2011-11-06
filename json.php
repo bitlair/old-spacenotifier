@@ -20,11 +20,13 @@ function getJSON() {
 	}
 	
 	arsort($tmp_events);
-	$i = 1;
+	$count = 1;
 	$events = array();
 	
 	foreach ($tmp_events as $t => $event) {
 		$events[] = array("t"=>$t,"name"=>$event['name'],"type"=>$event['type']);
+		if ($count >= 5) break;
+		$count++;
 	}
 	
 	
