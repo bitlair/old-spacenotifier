@@ -5,7 +5,7 @@ function getJSON() {
 	/**
 	 * Gather info from db
 	 */
-	$state = $db->row("SELECT open FROM space_state LIMIT 1");
+	$state = $db->row("SELECT * FROM space_state LIMIT 1");
 	$open = $state->open;
 	$last_change = $state->last_update;
 	
