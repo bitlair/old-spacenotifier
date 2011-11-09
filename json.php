@@ -5,7 +5,9 @@ function getJSON() {
 	/**
 	 * Gather info from db
 	 */
-	$open = $db->column("SELECT open FROM space_state LIMIT 1");
+	$state = $db->row("SELECT open FROM space_state LIMIT 1");
+	$open = $state->open;
+	$last_change = $state->last_update;
 	
 	// get checkins
 	$q = $db->query("select `e`.`id` AS `id`,`e`.`mac_address` AS `mac_address`,`e`.`join_date` AS `join_date`,`e`.`part_date` AS `part_date`,`e`.`radio` AS `radio`,`e`.`ssid` AS `ssid`,`e`.`last_update` AS `last_update`,`u`.`username` AS `username`,`u`.`sex` AS `sex`,`m`.`device` AS `device`,`e`.`signal` AS `signal` from ((`wifi_event` `e` left join `user_mac_address` `m` on((`m`.`mac_address` = `e`.`mac_address`))) left join `user` `u` on((`m`.`user_id` = `u`.`id`))) WHERE username <> '' order by `e`.`join_date` DESC LIMIT 5");
@@ -23,7 +25,6 @@ function getJSON() {
 	$events = array();
 	
 	foreach ($tmp_events as $t => $event) {
-		if ($count == 1) $last_change = $t;
 		$events[] = array("t"=>$t,"name"=>$event['name'],"type"=>$event['type']);
 		if ($count >= 5) break;
 		$count++;
@@ -34,12 +35,22 @@ function getJSON() {
 	 * Output as JSON
 	 */
 	$reply = array(
+		'api'		=> JSON_API,
 		'space'		=> JSON_SPACE,
+		'logo'		=> JSON_LOGO,
 		'url'		=> JSON_URL,
 		'address' 	=> JSON_ADDRESS,
-		'phone'		=> JSON_PHONE,
-		'cam'		=> JSON_CAM,
-		'logo'		=> JSON_LOGO,
+		'contact'	=> array (
+						'phone'		=> JSON_PHONE,
+						'irc'		=> JSON_IRC,
+						'twitter'	=> JSON_TWITTER,
+						'email'		=> JSON_EMAIL,
+						'ml'		=> JSON_ML
+			),
+		'lat'		=> JSON_LAT,
+		'lon'		=> JSON_LON,
+		'cam'		=> array (JSON_CAM),
+		'stream'	=> array (JSON_STREAM),
 		'open'		=> ($open == 1),
 		'lastchange'=> intval($last_change),
 		'events'	=> $events

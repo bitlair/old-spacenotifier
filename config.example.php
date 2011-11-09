@@ -72,9 +72,17 @@ function customNotifyEvent() {
 /**
  * JSON variables
  */
+define ('JSON_API','0.9');		// version
 define ('JSON_SPACE','spacename');
 define ('JSON_URL','https://space.url/');
 define ('JSON_ADDRESS','Address, Zip City, Country');
 define ('JSON_PHONE','+CCNNNNNNNNN');
 define ('JSON_CAM','http://cam.url/');
 define ('JSON_LOGO','https://logo.url/');
+define ('JSON_IRC','irc://irc.server.com/channel');
+define ('JSON_TWITTER', '@twitteraccount');
+define ('JSON_EMAIL', 'address@domain.com');
+define ('JSON_ML', 'ml@domain.com');		// mailinglist
+define ('JSON_LAT', 0.0);		// float latitude
+define ('JSON_LON', 0.0);		// float longitude
+define ('JSON_STREAM', 'http://stream.url');
