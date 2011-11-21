@@ -79,6 +79,8 @@ define ('JSON_ADDRESS','Address, Zip City, Country');
 define ('JSON_PHONE','+CCNNNNNNNNN');
 define ('JSON_CAM','http://cam.url/');
 define ('JSON_LOGO','https://logo.url/');
+define ('JSON_ICON_OPEN','https://open.url/');
+define ('JSON_ICON_CLOSED','https://closed.url/');
 define ('JSON_IRC','irc://irc.server.com/channel');
 define ('JSON_TWITTER', '@twitteraccount');
 define ('JSON_EMAIL', 'address@domain.com');

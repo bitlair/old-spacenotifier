@@ -39,6 +39,10 @@ function getJSON() {
 		'space'		=> JSON_SPACE,
 		'logo'		=> JSON_LOGO,
 		'url'		=> JSON_URL,
+        'icon'      => array (
+                        'open'      => JSON_ICON_OPEN,
+                        'closed'    => JSON_ICON_CLOSED,
+            ),
 		'address' 	=> JSON_ADDRESS,
 		'contact'	=> array (
 						'phone'		=> JSON_PHONE,
