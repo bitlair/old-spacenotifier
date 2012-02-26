@@ -72,7 +72,7 @@ function customNotifyEvent() {
 /**
  * JSON variables
  */
-define ('JSON_API','0.9');		// version
+define ('JSON_API','0.12');		// version
 define ('JSON_SPACE','spacename');
 define ('JSON_URL','https://space.url/');
 define ('JSON_ADDRESS','Address, Zip City, Country');
@@ -88,3 +88,10 @@ define ('JSON_ML', 'ml@domain.com');		// mailinglist
 define ('JSON_LAT', 0.0);		// float latitude
 define ('JSON_LON', 0.0);		// float longitude
 define ('JSON_STREAM', 'http://stream.url');
+
+$_json_feeds = array (
+	array ("name" => "blog", "type" => "application/rss+xml", "url" => "https://bitlair.nl/feed"),
+	array ("name" => "calendar", "type" => "text/calendar", "url" => "https://bitlair.nl/calendar.php")
+);
+
+$_json_keymasters = array ("zarya","synnack","hobbybob","ak47");

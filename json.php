@@ -30,7 +30,7 @@ function getJSON() {
 		$count++;
 	}
 	
-	
+	global $_json_keymasters, $_json_feeds;
 	/**
 	 * Output as JSON
 	 */
@@ -57,7 +57,9 @@ function getJSON() {
 		'stream'	=> array (JSON_STREAM),
 		'open'		=> ($open == 1),
 		'lastchange'=> intval($last_change),
-		'events'	=> $events
+		'events'	=> $events,
+		'feeds'		=> $_json_feeds,
+		'keymasters'=> $_json_keymasters
 	);
 	
 	return json_encode($reply);
