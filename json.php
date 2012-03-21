@@ -54,7 +54,7 @@ function getJSON() {
 		'lat'		=> JSON_LAT,
 		'lon'		=> JSON_LON,
 		'cam'		=> array (JSON_CAM),
-		'stream'	=> array (JSON_STREAM),
+		'stream'	=> array ("mjpg" => JSON_STREAM),
 		'open'		=> ($open == 1),
 		'lastchange'=> intval($last_change),
 		'events'	=> $events,
